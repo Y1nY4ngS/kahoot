@@ -20,7 +20,10 @@ const server = http.createServer(app);
 const io = new Server(server, { pingInterval: 10000, pingTimeout: 20000 });
 
 app.use(express.json({ limit: '5mb' }));
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, 'public'), {
+  extensions: ['html'],
+  setHeaders: res => res.setHeader('Cache-Control', 'no-cache'), // always revalidate, so new deploys show up on a normal reload
+}));
 app.get('/', (req, res) => res.redirect('/play'));
 // list of groups for the join form
 app.get('/api/groups', (req, res) => res.json(GROUPS));

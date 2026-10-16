@@ -3,6 +3,13 @@ const COLORS = ['var(--c0)', 'var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)',
 let quiz = null; // { id, title, questions }
 let dirty = false;
 
+// any edit: remember it and say so next to the Save button (the old "Saved" message must not stay up after new edits)
+function markDirty() {
+  dirty = true;
+  const s = document.getElementById('status');
+  if (s) s.innerHTML = '<span style="color:#B45309;font-weight:700">Unsaved changes</span>';
+}
+
 async function api(path, opts = {}) {
   const res = await fetch(path, {
     ...opts,
@@ -70,7 +77,7 @@ function renderEditor() {
       <button class="primary" id="addNum" style="background:var(--bg);color:#fff">+ Number guess</button>
     </div>`;
 
-  document.getElementById('title').oninput = e => { quiz.title = e.target.value; dirty = true; };
+  document.getElementById('title').oninput = e => { quiz.title = e.target.value; markDirty(); };
   document.getElementById('save').onclick = save;
   document.getElementById('start').onclick = async () => {
     // open the tab right away (inside the click) so Safari/Chrome don't block it as a pop-up, then save and point it at the host page
@@ -84,8 +91,8 @@ function renderEditor() {
     await api(`/api/quizzes/${quiz.id}`, { method: 'DELETE' });
     quiz = null; dirty = false; renderEditor(); loadList();
   };
-  document.getElementById('addMC').onclick = () => { quiz.questions.push(blankMC()); dirty = true; renderQuestions(); scrollEnd(); };
-  document.getElementById('addNum').onclick = () => { quiz.questions.push(blankNum()); dirty = true; renderQuestions(); scrollEnd(); };
+  document.getElementById('addMC').onclick = () => { quiz.questions.push(blankMC()); markDirty(); renderQuestions(); scrollEnd(); };
+  document.getElementById('addNum').onclick = () => { quiz.questions.push(blankNum()); markDirty(); renderQuestions(); scrollEnd(); };
   renderQuestions();
 }
 
@@ -116,13 +123,17 @@ function renderQuestions() {
     const i = Number(card.dataset.i);
     const q = quiz.questions[i];
     card.querySelectorAll('[data-f]').forEach(inp => {
-      inp.oninput = () => { q[inp.dataset.f] = inp.value; dirty = true; };
+      inp.oninput = () => { q[inp.dataset.f] = inp.value; markDirty(); };
     });
     card.querySelectorAll('[data-o]').forEach(inp => {
-      inp.oninput = () => { q.options[Number(inp.dataset.o)] = inp.value; dirty = true; };
+      inp.oninput = () => { q.options[Number(inp.dataset.o)] = inp.value; markDirty(); };
     });
     card.querySelectorAll('input[type=radio]').forEach(r => {
-      r.onchange = () => { q.correct = Number(r.value); dirty = true; };
+      r.onchange = () => {
+        q.correct = Number(r.value);
+        markDirty();
+        card.querySelectorAll('input[type=radio]').forEach(x => { x.checked = Number(x.value) === q.correct; });
+      };
     });
     card.querySelectorAll('[data-act]').forEach(btn => {
       btn.onclick = () => {
@@ -133,7 +144,7 @@ function renderQuestions() {
         if (a === 'down' && i < quiz.questions.length - 1) [quiz.questions[i + 1], quiz.questions[i]] = [quiz.questions[i], quiz.questions[i + 1]];
         if (a === 'addopt') { if (q.options.length < 6) q.options.push(''); }
         if (a === 'rmopt') { if (q.options.length > 2) { q.options.pop(); if (q.correct >= q.options.length) q.correct = 0; } }
-        dirty = true;
+        markDirty();
         renderQuestions();
       };
     });
@@ -193,3 +204,7 @@ document.getElementById('newQuiz').onclick = async () => {
 window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
 loadList().catch(() => {});
+
+// keep the sidebar (quizzes, past games) current without reloading: refresh whenever this tab is shown again
+document.addEventListener('visibilitychange', () => { if (!document.hidden) loadList().catch(() => {}); });
+window.addEventListener('focus', () => loadList().catch(() => {}));
