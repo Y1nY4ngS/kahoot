@@ -516,6 +516,23 @@ setInterval(() => {
   for (const [pin, g] of games) if (Date.now() - g.createdAt > 6 * 60 * 60 * 1000) games.delete(pin);
 }, 60 * 60 * 1000).unref();
 
+// Clean shutdown (Railway sends SIGTERM on every redeploy/restart): stop accepting connections,
+// then close the database before exiting so the native SQLite module is not torn down mid-flight.
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`${signal} received, shutting down`);
+  io.close();
+  server.close(() => {
+    try { db.close(); } catch (e) { /* ignore */ }
+    process.exit(0);
+  });
+  setTimeout(() => { try { db.close(); } catch (e) { /* ignore */ } process.exit(0); }, 3000).unref();
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
 server.listen(PORT, () => {
   console.log(`Quiz server running on port ${PORT}`);
   console.log(`  Admin:  http://localhost:${PORT}/admin   (password: ${ADMIN_PASSWORD === 'admin' ? 'admin  <- change with ADMIN_PASSWORD' : '(from ADMIN_PASSWORD)'})`);

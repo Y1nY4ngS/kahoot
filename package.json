@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Self-hosted Kahoot-style live quiz for 200+ players",
   "main": "server.js",
+  "engines": { "node": "22.x" },
   "scripts": {
     "start": "node server.js",
     "loadtest": "node loadtest.js 200"

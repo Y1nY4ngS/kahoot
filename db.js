@@ -3,7 +3,11 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const db = new Database(process.env.DB_FILE || path.join(__dirname, 'quiz.db'));
+const fs = require('fs');
+
+const dbFile = process.env.DB_FILE || path.join(__dirname, 'quiz.db');
+fs.mkdirSync(path.dirname(dbFile), { recursive: true }); // e.g. /data if the volume folder is missing
+const db = new Database(dbFile);
 db.pragma('journal_mode = WAL');
 
 db.exec(`
@@ -112,4 +116,6 @@ function getGroupResults(gameId) {
   return db.prepare('SELECT rank, group_name, players, total_score, avg_score, left_players, away_ms FROM group_results WHERE game_id = ? ORDER BY rank').all(gameId);
 }
 
-module.exports = { listQuizzes, getQuiz, createQuiz, updateQuiz, deleteQuiz, saveGame, listGames, getGame, getResults, getGroupResults };
+const close = () => db.close();
+
+module.exports = { close, listQuizzes, getQuiz, createQuiz, updateQuiz, deleteQuiz, saveGame, listGames, getGame, getResults, getGroupResults };

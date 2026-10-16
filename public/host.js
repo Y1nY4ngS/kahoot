@@ -75,8 +75,7 @@ function renderLobby(names, groups) {
         <div style="font-size:1.2rem;opacity:.7;margin:1.5vh 0">or scan the QR code</div>
         ${lan ? '<div class="warn">This link only works on this computer. Set PUBLIC_URL or use your network address.</div>' : ''}
         <div class="gcards" id="gcards" style="margin-top:2vh">${gcardsHtml(groups)}</div>
-        <div style="margin-top:2vh"><button class="ghost" id="openGroups">Open group screen (2nd monitor)</button>
-          <span class="hint" style="opacity:.6;margin-left:.6em">${esc(game.displayUrl)}</span></div>
+        <div style="margin-top:2vh"><button class="ghost" id="openGroups" title="Opens the group counter in a new window">Second monitor</button></div>
       </div>
       <img src="${game.qr}" alt="QR code to join">
     </div>`;
