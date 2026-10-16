@@ -158,7 +158,8 @@ const api = (p, method = 'GET', body) => fetch(BASE + p, {
     'returning player recognised (nobody away at the end)': lastDisplay.groups.every(g => g.away === 0),
     'main host screen gets no leave notice': !hostGotLeaveNotice,
     'scoring formulas': scoreMultipleChoice(0, 10000) === 1000 && scoreMultipleChoice(10000, 10000) === 500
-      && scoreNumber(2016, 2016, 10) === 1000 && scoreNumber(2011, 2016, 10) === 250 && scoreNumber(2026, 2016, 10) === 0,
+      && scoreNumber(2016, 2016, 10, 0, 10000) === 1000 && scoreNumber(2016, 2016, 10, 10000, 10000) === 500
+      && scoreNumber(2011, 2016, 10, 0, 10000) === 500 && scoreNumber(2026, 2016, 10, 0, 10000) === 0,
   };
   for (const [name, pass] of Object.entries(checks)) console.log(`  ${pass ? 'PASS' : 'FAIL'}  ${name}`);
   const ok = Object.values(checks).every(Boolean);

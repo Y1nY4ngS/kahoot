@@ -248,7 +248,7 @@ function endQuestion(game) {
         dist[a.value]++;
         if (a.value === q.correct) { pts = scoreMultipleChoice(a.timeMs, limitMs); exact = true; }
       } else {
-        pts = scoreNumber(a.value, q.answer, q.tolerance);
+        pts = scoreNumber(a.value, q.answer, q.tolerance, a.timeMs, limitMs);
         exact = a.value === q.answer;
         guesses.push({ name: p.name, value: a.value, diff: Math.abs(a.value - q.answer) });
       }
