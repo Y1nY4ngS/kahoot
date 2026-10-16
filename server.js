@@ -37,9 +37,12 @@ const clamp = (n, lo, hi) => Math.min(Math.max(n, lo), hi);
 function cleanQuestion(q) {
   const text = String(q.text || '').trim().slice(0, 300);
   const timeLimit = clamp(parseInt(q.timeLimit, 10) || 20, 5, 120);
+  if (!text) return null; // a question needs text
   if (q.type === 'number') {
-    let answer = Number(q.answer);
-    if (!Number.isFinite(answer)) answer = 0;
+    // the correct number is required (an empty field used to be saved silently as 0)
+    if (q.answer === '' || q.answer === null || q.answer === undefined) return null;
+    const answer = Number(q.answer);
+    if (!Number.isFinite(answer)) return null;
     const tol = Number(q.tolerance);
     return { type: 'number', text, answer, tolerance: Number.isFinite(tol) && tol > 0 ? tol : 0, timeLimit };
   }
@@ -209,6 +212,11 @@ function startQuestion(game) {
   if (game.qIndex >= game.questions.length) return endGame(game);
   const q = game.questions[game.qIndex];
   game.state = 'question';
+  if (game.qIndex === 0) {
+    // phones that were already away (locked screen) when the game starts count as having left; no pop-ups, counters only
+    for (const p of game.players.values()) if (p.away && !p.awaySince) { p.leaves++; p.awaySince = Date.now(); }
+    emitLobby(game);
+  }
   game.answers = new Map();
   game.startedAt = Date.now();
   game.endsAt = game.startedAt + q.timeLimit * 1000;
@@ -486,7 +494,8 @@ io.on('connection', socket => {
       value = Number(payload.value);
       if (!Number.isInteger(value) || value < 0 || value >= q.options.length) return ack({ ok: false, error: 'Invalid answer' });
     } else {
-      value = Number(String(payload.value).trim().replace(',', '.'));
+      const raw = String(payload.value ?? '').replace(/['\u2019\s]/g, '').replace(',', '.');
+      value = raw === '' ? NaN : Number(raw); // empty input must not count as 0
       if (!Number.isFinite(value)) return ack({ ok: false, error: 'Please enter a number' });
     }
     const timeMs = clamp(now - game.startedAt, 0, q.timeLimit * 1000);
@@ -515,6 +524,10 @@ io.on('connection', socket => {
 setInterval(() => {
   for (const [pin, g] of games) if (Date.now() - g.createdAt > 6 * 60 * 60 * 1000) games.delete(pin);
 }, 60 * 60 * 1000).unref();
+
+// An unexpected error in one handler must not take the whole server (and the running game) down: log it and carry on.
+process.on('uncaughtException', e => console.error('Uncaught exception:', e));
+process.on('unhandledRejection', e => console.error('Unhandled rejection:', e));
 
 // Clean shutdown (Railway sends SIGTERM on every redeploy/restart): stop accepting connections,
 // then close the database before exiting so the native SQLite module is not torn down mid-flight.

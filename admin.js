@@ -27,12 +27,14 @@ async function loadList() {
 
   const games = await (await api('/api/games')).json();
   document.getElementById('gameList').innerHTML = games.slice(0, 10).map(g => `
-    <div class="qitem" data-g="${g.id}"><span>${esc(g.title)}<br><small>${new Date(g.played_at).toLocaleString()} · ${g.player_count} players</small></span><small>CSV</small></div>`).join('') || '<p style="opacity:.7">None yet.</p>';
-  document.querySelectorAll('#gameList .qitem').forEach(el => el.onclick = async () => {
-    const res = await api(`/api/games/${el.dataset.g}/csv`);
+    <div class="qitem" style="cursor:default"><span>${esc(g.title)}<br><small>${new Date(g.played_at).toLocaleString()} · ${g.player_count} players</small></span>
+      <span><button class="small" data-csv="groups" data-g="${g.id}">Groups CSV</button> <button class="small" data-csv="players" data-g="${g.id}">Players CSV</button></span></div>`).join('') || '<p style="opacity:.7">None yet.</p>';
+  document.querySelectorAll('#gameList button[data-csv]').forEach(btn => btn.onclick = async () => {
+    const groups = btn.dataset.csv === 'groups';
+    const res = await api(`/api/games/${btn.dataset.g}/${groups ? 'groups.csv' : 'csv'}`);
     const url = URL.createObjectURL(await res.blob());
     const a = document.createElement('a');
-    a.href = url; a.download = `results-game-${el.dataset.g}.csv`; a.click();
+    a.href = url; a.download = `${groups ? 'groups' : 'players'}-game-${btn.dataset.g}.csv`; a.click();
     URL.revokeObjectURL(url);
   });
 }
@@ -71,8 +73,11 @@ function renderEditor() {
   document.getElementById('title').oninput = e => { quiz.title = e.target.value; dirty = true; };
   document.getElementById('save').onclick = save;
   document.getElementById('start').onclick = async () => {
-    if (!(await save())) return;
-    window.open(`/host?quiz=${quiz.id}`, '_blank');
+    // open the tab right away (inside the click) so Safari/Chrome don't block it as a pop-up, then save and point it at the host page
+    const w = window.open('', '_blank');
+    if (!(await save())) { if (w) w.close(); return; }
+    const url = `/host?quiz=${quiz.id}`;
+    if (w) w.location.href = url; else location.href = url;
   };
   document.getElementById('del').onclick = async () => {
     if (!confirm('Delete this quiz permanently?')) return;
@@ -172,7 +177,7 @@ async function save() {
   quiz = saved;
   dirty = false;
   renderEditor();
-  document.getElementById('status').innerHTML = `<span class="save-ok">Saved${dropped ? ` (${dropped} incomplete question${dropped > 1 ? 's' : ''} skipped: need at least 2 answers)` : ''}</span>`;
+  document.getElementById('status').innerHTML = `<span class="save-ok">Saved${dropped ? ` (${dropped} incomplete question${dropped > 1 ? 's' : ''} skipped: every question needs a text, multiple choice needs 2 answers, number guess needs the correct number)` : ''}</span>`;
   loadList();
   return true;
 }
