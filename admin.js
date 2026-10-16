@@ -101,7 +101,7 @@ function renderQuestions() {
       </div>
       <label>Question text</label>
       <textarea rows="2" data-f="text">${esc(q.text)}</textarea>
-      ${q.type === 'mc' ? mcFields(q) : numFields(q)}
+      ${q.type === 'mc' ? mcFields(q, i) : numFields(q)}
       <div class="row">
         <div><label>Time limit (seconds)</label><input type="number" min="5" max="120" data-f="timeLimit" value="${esc(q.timeLimit)}" style="width:120px"></div>
       </div>
@@ -135,13 +135,13 @@ function renderQuestions() {
   });
 }
 
-function mcFields(q) {
+function mcFields(q, i) {
   return `
     <label style="display:block;margin-top:10px">Answers (select the correct one)</label>
     ${q.options.map((o, k) => `
       <div class="optrow">
         <span class="dot" style="background:${COLORS[k]}"></span>
-        <input type="radio" name="c${Math.random()}" value="${k}" ${q.correct === k ? 'checked' : ''} title="Correct answer">
+        <input type="radio" name="correct-${i}" value="${k}" ${q.correct === k ? 'checked' : ''} title="Correct answer">
         <input data-o="${k}" value="${esc(o)}" placeholder="Answer ${k + 1}">
       </div>`).join('')}
     <div class="row">
