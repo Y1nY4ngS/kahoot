@@ -1,0 +1,19 @@
+{
+  "name": "quizparty",
+  "version": "1.0.0",
+  "description": "Self-hosted Kahoot-style live quiz for 200+ players",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "loadtest": "node loadtest.js 200"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.0.0",
+    "express": "^4.19.2",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.7.5"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.7.5"
+  }
+}
