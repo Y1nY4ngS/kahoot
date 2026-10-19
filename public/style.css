@@ -54,6 +54,7 @@ body.play main { max-width: 520px; margin: 0 auto; padding: 18px; min-height: 10
 /* ---------- host (projector) ---------- */
 body.host main { min-height: 100vh; padding: 3vh 4vw 12vh; display: flex; flex-direction: column; gap: 3vh; }
 .host .topbar { display: flex; justify-content: space-between; align-items: center; opacity: .85; font-weight: 700; }
+.host .toptitle { flex: 1; text-align: center; padding: 0 2vw; color: #fff; opacity: 1; font-size: clamp(1.6rem, 3.6vw, 3.4rem); font-weight: 900; line-height: 1.1; }
 .host .pinbig { font-size: clamp(3rem, 9vw, 8rem); font-weight: 900; letter-spacing: .08em; line-height: 1; }
 .host .lobby { display: grid; grid-template-columns: 1fr auto; gap: 4vw; align-items: center; }
 .host .lobby img { width: min(34vw, 55vh); border-radius: 16px; background: #fff; padding: 10px; }

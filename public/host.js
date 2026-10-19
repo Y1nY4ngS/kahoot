@@ -79,7 +79,7 @@ function renderLobby(names, groups) {
       </div>
       <img src="${game.qr}" alt="QR code to join">
     </div>`;
-  document.getElementById('openGroups').onclick = () => window.open(game.displayUrl, 'groupscreen');
+  document.getElementById('openGroups').onclick = e => { window.open(game.displayUrl, 'groupscreen'); e.currentTarget.blur(); };
   setControls('Start game', 'host:start', 'Space / Enter = start');
 }
 
@@ -100,7 +100,7 @@ socket.on('question', q => {
     ? `<div class="opts">${q.options.map((o, i) => `<div class="opt opt${i}"><span>${SHAPES[i]}</span><span>${esc(o)}</span></div>`).join('')}</div>`
     : `<div class="stat"><b>#</b>Type your guess on your phone</div>`;
   app.innerHTML = `
-    <div class="topbar"><span>Question ${q.index + 1} / ${q.total}</span><span>PIN ${esc(game.pin)}</span><span class="timer" id="t"></span></div>
+    <div class="topbar"><span>Question ${q.index + 1} / ${q.total}</span><span class="toptitle">${esc(game.title)}</span><span class="timer" id="t"></span></div>
     <div class="bar"><i id="bar"></i></div>
     <div class="qtext">${esc(q.text)}</div>
     ${opts}
@@ -138,7 +138,7 @@ socket.on('host:results', r => {
       <div class="stat" style="font-size:1.4rem">Median guess: ${r.median === null ? '–' : esc(r.median)}</div>`;
   }
   app.innerHTML = `
-    <div class="topbar"><span>Question ${r.index + 1} / ${r.total}</span><span>${r.answered} / ${r.players} answered</span></div>
+    <div class="topbar"><span>Question ${r.index + 1} / ${r.total}</span><span class="toptitle">${esc(r.title || game.title)}</span><span>${r.answered} / ${r.players} answered</span></div>
     <div class="qtext">${esc(r.text)}</div>
     ${body}`;
   setControls(r.isLast ? 'Final results' : 'Next question', 'host:next', 'Space / Enter = continue');
